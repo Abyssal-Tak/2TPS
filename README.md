@@ -1,6 +1,8 @@
 # 2TPS
 Converts Tak Notation into the TPS format
 
+The converted TPS will be appended to a file called "TPS.txt"
+
 If you already have Python 3 installed, you can just run the python file from the Py Only folder from any Python IDE—it doesn't require any modules that are not included with Python by default. You will not need any of the files from the Parser folder if you don't want to use the .exe version of the parser.
 
 If you don't have Python 3 installed, you will need to use the parser.exe from the parser folder. 
