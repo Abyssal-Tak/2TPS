@@ -3,13 +3,16 @@ from math import ceil
 
 
 file = input('Name of the PTN file that you would like to parse?\n')
+# file = 'fwwwwibib vs Gerrek 2016.08.12.ptn'
 try:
-    plyNumber = int(input('At how many plys would you like the TPS to be printed?\n'))
+    #plyNumber = set(input('At how many plys would you like the TPS to be printed?\n'))
+    s = input('At how many plys would you like the TPS to be printed?\n')
+    plyNumber = set(map(int, s.split(',')))
 except ValueError:
-    plyNumber = 1000
+    print("Invalid input! Defaulting to end of game position...")
+    plyNumber = {1000}
 
 
-#file = 'fwwwwibib vs Gerrek 2016.08.12.ptn'
 
 class Error(Exception):
     """Base Error Class"""
@@ -101,13 +104,19 @@ class Board:
 
 
 
-def playMoves(moves, boardSize = 6, calcTPS = True, breakPly = 1000, fileString = file):
+def playMoves(moves, boardSize = 6, breakPly = {1000}, fileString = file):
     outFile = 'TPS.txt'
     plyCount = 1
 
-    pl = 'black'
+    lastPly = len(moves)
+    for num in breakPly:
+        if num > lastPly:
+            breakPly.add(lastPly)
+            break
     x = Board(boardSize)
     flatDict = {}
+    with open(outFile, 'a') as f:
+        f.write(fileString + ' :' + '\n')
     # The coordinate systems are confusing, but they're made with TPS in mind.
     if x.length == 5:
         flatDict = {'a1': (4,0), 'a2': (3,0), 'a3': (2,0), 'a4': (1,0), 'a5': (0,0),
@@ -168,61 +177,57 @@ def playMoves(moves, boardSize = 6, calcTPS = True, breakPly = 1000, fileString 
                 else:
                     x.new_move_stack(flatDict[splitMove[0][1:]], tilesToMove, direct, str(tilesToMove))
 
-        if plyCount == breakPly:
-            break
+        if plyCount in breakPly:
+            thisBP = plyCount
+            TPString = '[TPS "'
+            for eachRow in x.b:
+                counter2 = 0
+                for eachTile in eachRow:
+                    if eachTile is not '':
+                        counter2 += 1
+                        for eachChar in eachTile:
+                            if eachChar is 'W':
+                                TPString += '1'
+                            elif eachChar is 'B':
+                                TPString += '2'
+                            elif eachChar is 'S':
+                                TPString += '1S'
+                            elif eachChar is 'T':
+                                TPString += '2S'
+                            elif eachChar is 'C':
+                                TPString += '1C'
+                            elif eachChar is 'D':
+                                TPString += '2C'
+                            else:
+                                pass
+                        if counter2 < x.length:
+                            TPString += ','
+                    else:
+                        counter2 += 1
+                        TPString += 'x1'
+                        if counter2 < x.length:
+                            TPString += ','
+                TPString += '/'
+
+            TPString = TPString[:-1]
+            if len(moves) % 2 == 0:
+                TPString += ' 1 '
+            else:
+                TPString += ' 2 '
+            if thisBP > len(moves):
+                moveNumber = ceil(len(moves) / 2)
+            else:
+                moveNumber = ceil(thisBP / 2)
+            TPString += str(moveNumber)
+            TPString += '"]'
+            print(TPString)
+
+            with open(outFile, 'a') as f:
+                f.write(TPString + '\n')
 
         plyCount += 1
 
-
-    #x.print_board()
-
-    if calcTPS is True:
-        TPString = '[TPS "'
-        for eachRow in x.b:
-            counter2 = 0
-            for eachTile in eachRow:
-                if eachTile is not '':
-                    counter2 += 1
-                    for eachChar in eachTile:
-                        if eachChar is 'W':
-                            TPString += '1'
-                        elif eachChar is 'B':
-                            TPString += '2'
-                        elif eachChar is 'S':
-                            TPString += '1S'
-                        elif eachChar is 'T':
-                            TPString += '2S'
-                        elif eachChar is 'C':
-                            TPString += '1C'
-                        elif eachChar is 'D':
-                            TPString += '2C'
-                        else:
-                            pass
-                    if counter2 < x.length:
-                        TPString += ','
-                else:
-                    counter2 += 1
-                    TPString += 'x1'
-                    if counter2 < x.length:
-                        TPString += ','
-            TPString += '/'
-
-        TPString = TPString[:-1]
-        if len(moves) % 2 == 0:
-            TPString += ' 1 '
-        else:
-            TPString += ' 2 '
-        if breakPly > len(moves):
-            moveNumber = ceil(len(moves) / 2)
-        else:
-            moveNumber = ceil(breakPly / 2)
-        TPString += str(moveNumber)
-        TPString += '"]'
-        print(TPString)
-
-        with open(outFile,'a') as f:
-            f.write(fileString + '   :' + '\n')
-            f.write(TPString + '\n')
+        # End func playMoves
 
 
 
@@ -249,9 +254,8 @@ def parsePTN(inFile):
 
 
 gameMoves, bs = parsePTN(file)
-#print(gameMoves)
 
-playMoves(gameMoves, boardSize = bs, calcTPS = True, breakPly = plyNumber)
+playMoves(gameMoves, boardSize = bs, breakPly = plyNumber)
 
 
 
